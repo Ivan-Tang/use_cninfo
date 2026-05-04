@@ -94,3 +94,16 @@ cli.py        ← argparse,6 个子命令
 | `docs/` | 接口实测知识(api_reference / capabilities / gotchas / cookbook),只读参考 |
 | `pyproject.toml` | uv / pip 标准 |
 | `.github/workflows/ci.yml` | lint + 离线测试矩阵(3.10/3.11/3.12) |
+
+## 项目状态(截至 2026-05-04)
+
+**已开源**:[rollysys/use_cninfo](https://github.com/rollysys/use_cninfo)(public, MIT),`main` 分支 = 唯一发布分支。CI 已绿(3.10/3.11/3.12 矩阵)。
+
+**已上游集成**:[duolongworld/AI_Renaissance#17](https://github.com/duolongworld/AI_Renaissance/pull/17) — 给 AI_Renaissance 项目加了 `data_sources/cninfo.py`(subprocess 调本工具 CLI)+ `skills/data/cninfo/SKILL.md`,PR 等 review。该 fork 在 `rollysys/AI_Renaissance:feat/data-cninfo` 分支上。
+
+**未做的真机验证**(后续接到反馈时再补):
+- `search --type ... --sub-type ...` 路径**没跑过真实 announcement_filter**(本机未装 argus_legal,只验证了缺失态报错 graceful)。装好 announcement_filter 后应跑一次 e2e 确认 classifier 在 cninfo 返回的中文 title 上分类合理
+- 老 PDF 404(2024-06 之前)的失败重试 / failure 表机制只在 `gotchas.md #7` 提了,代码里**没实现** — 用户碰到时再加,现在不预先抽象
+- `search` 命令对每条 ann_id 的 type/sub_type 标签**没缓存** — 全市场切片 + 标签过滤会反复调 classifier,后续若慢可在 `meta/<ann_id>.json` 写入 `tags` 字段
+
+**接到 PR review 反馈时**:`/tmp/AI_Renaissance` 已清理,需要时重新 `git clone https://github.com/rollysys/AI_Renaissance.git && git checkout feat/data-cninfo` 改完 push 即可,branch 已存在。
