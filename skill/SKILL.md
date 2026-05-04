@@ -19,8 +19,8 @@ description: 按需抓取 A 股上市公司公告。覆盖巨潮资讯网(cninfo
 
 ```bash
 # 1. 本工具
-git clone <this-repo>
-cd claude_cninfo && uv tool install -e .            # 装上 `cninfo` 命令
+git clone https://github.com/rollysys/use_cninfo.git
+cd use_cninfo && uv tool install -e .            # 装上 `cninfo` 命令
 
 # 2. (可选)公告分类器 — 提供 search 的 --type/--sub-type 标签精准过滤
 git clone https://github.com/rollysys/announcement_filter.git

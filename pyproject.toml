@@ -32,8 +32,8 @@ dev = [
 cninfo = "cninfo.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/<owner>/claude_cninfo"
-Issues = "https://github.com/<owner>/claude_cninfo/issues"
+Homepage = "https://github.com/rollysys/use_cninfo"
+Issues = "https://github.com/rollysys/use_cninfo/issues"
 
 [build-system]
 requires = ["hatchling"]

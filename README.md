@@ -2,7 +2,7 @@
 
 > A 股上市公司公告按需抓取 — 巨潮资讯网(cninfo.com.cn)`hisAnnouncement/query` 接口的 Python CLI 包装,顺便给 Claude Code 提供一个 skill 入口。
 
-[![ci](https://github.com/<owner>/claude_cninfo/actions/workflows/ci.yml/badge.svg)](https://github.com/<owner>/claude_cninfo/actions/workflows/ci.yml)
+[![ci](https://github.com/rollysys/use_cninfo/actions/workflows/ci.yml/badge.svg)](https://github.com/rollysys/use_cninfo/actions/workflows/ci.yml)
 
 cninfo 是中国证监会指定的 A 股法定信息披露平台。本工具直接从 cninfo 拉**任何**已公开公告(年报/季报/中报/三季报/临时公告/减持/重组/股东大会/...),下载 PDF + 用 PyMuPDF 提取全文 Markdown,**纯按需**,命中本地缓存秒级返回。
 
@@ -16,8 +16,8 @@ cninfo 是中国证监会指定的 A 股法定信息披露平台。本工具直�
 ## 安装
 
 ```bash
-git clone https://github.com/<owner>/claude_cninfo.git
-cd claude_cninfo
+git clone https://github.com/rollysys/use_cninfo.git
+cd use_cninfo
 
 # 推荐:uv tool install,装到独立 venv 并暴露全局 `cninfo` 命令
 uv tool install -e .
