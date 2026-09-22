@@ -159,6 +159,24 @@ def is_periodic_report_body(title: str) -> bool:
     return bool(_REPORT_TAIL_RE.search(t))
 
 
+# 「某年年报本体」的判定,和上面那条是两件事:上面只判"是不是定期报告本体",
+# 这条还要**锁定年份**。用 `title.endswith(f"{year}年年度报告")` 做等值比较会漏:
+#   工行/农行/招行写「2024年度报告」(少一个「年」)
+#   紫金矿业写「2024年年报报告」(发行人把「年报+报告」写重了)
+# 两条都整份取不到。反过来,换成 search 之后必须显式比年份,否则 2023 年报会被
+# 当 2024 的收进来 —— 原来是靠 endswith 的前缀年份隐式生效的。
+_ANNUAL_TITLE_RE = re.compile(r"(\d{4})年(?:年?度|年报)报告$")
+
+
+def is_annual_body(title: str, year: int) -> bool:
+    """某年年报本体:三种尾缀都收 + 校验年份 + 排除摘要/审计/H股公告。"""
+    t = clean_title(title)
+    if t.endswith("摘要") or any(kw in t for kw in _NOT_BODY_KW):
+        return False
+    m = _ANNUAL_TITLE_RE.search(t)
+    return bool(m and m.group(1) == str(year))
+
+
 # ---------------------------------------------------------------------------
 # 6. PDF 下载 + PyMuPDF 解析
 # ---------------------------------------------------------------------------
@@ -207,13 +225,17 @@ def fetch_stock_latest_annual_report(
 
     返回 {ann_id, ann_date, title, url, text, total_pages, extracted_pages}
     或 None(没找到)
+
+    标题筛选走 is_annual_body：三种尾缀都认、锁年份、排掉摘要/审计/H股公告。
+    H股那份要注意 —— 它比 A 股版晚发约一个月,按时间倒序翻页时**排在前面**,
+    不排掉就会把港式合并年报(繁体、无证监会标准章节)当成 A 股正文返回。
+    另:更正后重发的标题带括号后缀,过不了 `…报告$`,所以拿到的天然是首发版本。
     """
-    target_title_tail = f"{year}年年度报告"
     for it in query_all(plate=plate, category=CATEGORY_NDBG, se_date=se_date_window):
         if it.get("secCode") != sec_code:
             continue
         title = clean_title(it.get("announcementTitle"))
-        if not title.endswith(target_title_tail) or title.endswith("摘要"):
+        if not is_annual_body(title, year):
             continue
         ann_id = int(it["announcementId"])
         ann_date = epoch_ms_to_ann_date(int(it["announcementTime"]))

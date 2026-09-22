@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 uv venv --python 3.10
 uv pip install -e ".[dev]"
 
-# 跑测试(离线,32 个)
+# 跑测试(离线,35 个)
 uv run pytest                       # 全跑
 uv run pytest tests/test_api.py     # 单文件
 uv run pytest -k "cache_hit"        # 按名字过滤
