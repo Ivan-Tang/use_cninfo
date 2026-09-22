@@ -44,11 +44,17 @@ KIND_TO_CATEGORY = {
     "q3": CATEGORY_SJDBG,
 }
 
-KIND_TO_TITLE_TAIL = {
-    "annual": "年年度报告",
-    "q1": "年第一季度报告",
-    "h1": "年半年度报告",
-    "q3": "年第三季度报告",
+# 定期报告本体在 cninfo 上的标题尾缀。年度报告有三种并存写法：
+#   2024年年度报告  —— 多数公司
+#   2024年度报告    —— 四大行、招商银行等
+#   2024年年报报告  —— 紫金矿业（发行人自己写重了「年报+报告」，非披露类型差异）
+# 差一个「年」或写成「年报报告」，用等值比较必然漏掉（工行/农行/招行/紫金的正文
+# 都取不到）。三种写法统一收成 `(\d{4})年(?:年?度|年报)报告`。
+_KIND_TO_TITLE_RE = {
+    "annual": re.compile(r"(\d{4})年(?:年?度|年报)报告$"),
+    "q1": re.compile(r"(\d{4})年第一季度报告$"),
+    "h1": re.compile(r"(\d{4})年半年度报告$"),
+    "q3": re.compile(r"(\d{4})年第三季度报告$"),
 }
 
 BEIJING = timezone(timedelta(hours=8))
@@ -142,8 +148,15 @@ def adjunct_to_url(adjunct_path: str) -> str:
     return PDF_BASE + adjunct_path.lstrip("/")
 
 
-_REPORT_TAIL_RE = re.compile(r"\d{4}年(年度|第一季度|半年度|第三季度)报告$")
-_NOT_BODY_KW = ("审计报告", "内部控制", "提示性公告", "披露", "鉴证报告")
+_REPORT_TAIL_RE = re.compile(
+    r"\d{4}年(?:年?度|年报)报告$|\d{4}年(?:第一季度|半年度|第三季度)报告$"
+)
+# H股公告：A+H 公司会同时挂一份「XXH股公告-2024年年度报告」，标题同样以
+# 「2024年年度报告」结尾,会被 is_kind_report_body 误收。它比 A 股版晚一个月发,
+# 按时间倒序翻页时排在前面,于是 find_periodic_report 抓到的是港式合并年报
+# (繁体、无「报告期内公司从事的主要业务」章节),而不是 A 股正文。建设银行、
+# 中国银行都栽在这上面。
+_NOT_BODY_KW = ("审计报告", "内部控制", "提示性公告", "披露", "鉴证报告", "H股")
 
 
 def is_periodic_report_body(title: str) -> bool:
@@ -163,10 +176,11 @@ def is_kind_report_body(title: str, year: int, kind: str) -> bool:
         return False
     if any(kw in t for kw in _NOT_BODY_KW):
         return False
-    tail = KIND_TO_TITLE_TAIL.get(kind)
-    if not tail:
+    pat = _KIND_TO_TITLE_RE.get(kind)
+    if not pat:
         return False
-    return t.endswith(f"{year}{tail}")
+    m = pat.search(t)
+    return bool(m and m.group(1) == str(year))
 
 
 def to_ts_code(sec_code: str, plate: str) -> str:

@@ -31,18 +31,38 @@
 - 部分公司:`<sec_name>:2024年年度报告`(冒号前缀)
 - 同一公司同一报告可能有 2 条记录(不同 announcementId,标题略有差异 — 一条带前缀一条不带)
 
+**年度报告的三种尾缀**(FY2024 全市场实测):
+- `2024年年度报告` — 多数
+- `2024年度报告` — 少一个「年」,四大行、招商银行、中国石油这一类(48 家)
+- `2024年年报报告` — 紫金矿业,发行人自己写重了(年报+报告),不是披露类型差异
+
+**还要排除 A+H 公司的 H 股公告**:同一家公司会另挂一份
+`<公司名>H股公告-2024年年度报告`,标题也以「2024年年度报告」结尾。它**比 A 股版
+晚发约一个月**,而翻页是按时间倒序,所以排在前面 —— 不排除就会把港式合并年报
+(繁体、无证监会标准章节)当正文抓下来。建设银行、中国银行都栽在这上面。
+
 **对策**:
 ```python
 import re
-def is_main_annual_report(title: str, year: int) -> bool:
-    """匹配 'YYYY年年度报告' 但不要摘要 / 审计 / 内控 / 提示性公告。"""
+_TITLE_RE = {
+    'annual': re.compile(r'(\d{4})年(?:年?度|年报)报告$'),
+    'q1': re.compile(r'(\d{4})年第一季度报告$'),
+    'h1': re.compile(r'(\d{4})年半年度报告$'),
+    'q3': re.compile(r'(\d{4})年第三季度报告$'),
+}
+def is_main_report(title: str, year: int, kind: str) -> bool:
+    """匹配 'YYYY年[年度/年报]报告' 但不要摘要 / 审计 / 内控 / 提示性公告 / H股公告。"""
     title = re.sub(r'</?em>', '', title).strip()
     if title.endswith('摘要'):
         return False
-    if any(kw in title for kw in ['审计报告', '内部控制', '提示性公告', '披露']):
+    if any(kw in title for kw in ['审计报告', '内部控制', '提示性公告', '披露', 'H股']):
         return False
-    return bool(re.search(rf'{year}年年度报告$', title))
+    m = _TITLE_RE[kind].search(title)
+    return bool(m and m.group(1) == str(year))
 ```
+
+用捕获组 + 比对年份,而不是把 `{year}` 直接拼进正则,是为了让三种尾缀共用一条
+模式:拼字符串写不出来 `2024年(年度|年报)报告` 这种既要卡年份又要容错的形式。
 
 ## 4. `announcementTime` 是 UTC epoch ms,差 8 小时
 
