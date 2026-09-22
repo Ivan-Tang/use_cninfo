@@ -64,6 +64,14 @@ cli.py        ← argparse,6 个子命令
 - 改 `api.py`(常量 / 函数)→ 同步更新 `docs/api_reference.md` 那张表
 - 加 fixture(`tests/fixtures/`) → 加单测
 
+**改判定规则(标题过滤等)**:
+- `docs/cookbook.py` 里有**镜像实现**,要一起改:第 5 节的 `is_periodic_report_body` /
+  `_REPORT_TAIL_RE` / `_NOT_BODY_KW`,以及第 8 节取年报示例里**自带的那份标题筛选**
+  (曾经是 `title.endswith(f"{year}年年度报告")`,与 `api.py` 各写一份,改了一处漏了另一处)。
+  cookbook 故意保持独立(定位是"给新项目复制粘贴"),所以不能靠 import 消掉重复 ——
+  只能靠这条规矩。改之前先 `grep -n "endswith\|_REPORT_TAIL_RE\|_NOT_BODY_KW" docs/cookbook.py`
+  确认没有第三处。
+
 **新增 CLI 子命令**:
 - `cli.py` 的 `build_parser()` 加子 parser,`cmd_xxx` 写动作,默认 JSON 优先 + 表格可选
 - 一定要在 `tests/test_cli.py` 加一个走 `main([...])` 的覆盖(可只看返回码 / stderr)
